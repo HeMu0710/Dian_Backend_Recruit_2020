@@ -1,29 +1,43 @@
 from django.db import models
+from django.core import serializers
 import random
 
 
+class UserManager(models.Manager):
+    def get_by_natural_key(self, nickname):
+        return self.get(nickname=nickname)
+
+
 class User(models.Model):
-    nickname = models.CharField(max_length=50, default='user' + str(random.randint(1000, 9999)), name='用户昵称')
-    username = models.CharField(max_length=50, unique=True, name='用户名')
-    password = models.CharField(max_length=50, name='用户密码（加密后）')
-    region = models.CharField(max_length=50, name='所在地区')
-    email = models.EmailField(unique=True, name='用户邮箱')
-    created_date = models.DateTimeField(auto_now_add=True, name='注册日期')
+    nickname = models.CharField(max_length=50, unique=True)
+    username = models.CharField(max_length=50, unique=True)
+    password = models.CharField(max_length=50)
+    region = models.CharField(max_length=50)
+    email = models.EmailField(unique=True)
+    created_date = models.DateTimeField(auto_now_add=True)
+
+    objects = UserManager()
 
     def __str__(self):
         return self.nickname
 
+    def natural_key(self):
+        return self.nickname
+
 
 class Article(models.Model):
-    title = models.CharField(max_length=100, name='文章标题')
-    author = models.ForeignKey(User, on_delete=models.CASCADE, name='文章作者')
-    content = models.TextField(name='文章内容')
-    created_date = models.DateTimeField(auto_now_add=True, name='创建日期')
-    edited_date = models.DateTimeField(auto_now=True, name='上次修改日期')
+    article_title = models.CharField(max_length=100)
+    article_author = models.ForeignKey(User, on_delete=models.CASCADE)
+    article_content = models.TextField()
+    created_date = models.DateTimeField(auto_now_add=True)
+    edited_date = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return self.article_title
 
 
 class comment(models.Model):
-    article = models.ForeignKey(Article, on_delete=models.CASCADE, name='被评论文章')
-    speaker = models.ForeignKey(User, on_delete=models.CASCADE, name='评论用户')
-    comment = models.TextField(name='评论内容')
-    created_date = models.DateTimeField(auto_now_add=True, name='评论时间')
+    comment_article = models.ForeignKey(Article, on_delete=models.CASCADE)
+    comment_user = models.ForeignKey(User, on_delete=models.CASCADE)
+    comment_content = models.TextField()
+    comment_date = models.DateTimeField(auto_now_add=True)
