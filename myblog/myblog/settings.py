@@ -31,6 +31,7 @@ ALLOWED_HOSTS = []
 # Application definition
 
 INSTALLED_APPS = [
+    'auth_jwt',
     'blog_backend',
     'django.contrib.admin',
     'django.contrib.auth',
@@ -83,6 +84,14 @@ DATABASES = {
         'HOST': '127.0.0.1',
         'PORT': '3306',
     },
+    'db_cn': {
+        'ENGINE': 'django.db.backends.mysql',
+        'NAME': 'my_blog_cn',
+        'USER': 'root',
+        'PASSWORD': '3239',
+        'HOST': '127.0.0.1',
+        'PORT': '3306',
+    },
     'db_us': {
         'ENGINE': 'django.db.backends.mysql',
         'NAME': 'my_blog_us',
@@ -98,7 +107,7 @@ DATABASES = {
         'PASSWORD': '3239',
         'HOST': '127.0.0.1',
         'PORT': '3306',
-    }
+    },
 }
 
 
