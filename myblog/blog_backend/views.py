@@ -34,10 +34,9 @@ def blogRUD(request, user, pk):
     if request.method == 'POST':
         # 检查当前用户是否为博客的作者
         if article.first().article_author == user:
-            edit_article_title = request.POST.get('article_title')
-            edit_article_content = request.POST.get('article_content')
-            Article.objects.using(db).filter(id=pk).update(article_title=edit_article_title,
-                                                           article_content=edit_article_content)
+            article.first().article_title = request.POST.get('article_title')
+            article.first().article_content = request.POST.get('article_content')
+            article.first().save(using=db)
             return JsonResponse({"status_code": 200, "message": "edit article success"})
         else:
             return JsonResponse({"status_code": 403, "message": "No right to edit"})
