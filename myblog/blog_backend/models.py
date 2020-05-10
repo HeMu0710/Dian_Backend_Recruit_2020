@@ -65,8 +65,8 @@ class Article(models.Model):
         return self.article_title
 
 
-class comment(models.Model):
+class Comment(models.Model):
     comment_article = models.ForeignKey(Article, on_delete=models.CASCADE)
-    comment_user = models.ForeignKey(User, on_delete=models.CASCADE)
+    comment_user = models.CharField(max_length=50)
     comment_content = models.TextField()
     comment_date = models.DateTimeField(auto_now_add=True)

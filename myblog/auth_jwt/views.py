@@ -13,28 +13,63 @@ def auth_required():
             try:
                 auth = request.META.get('HTTP_AUTHORIZATION').split()
             except AttributeError:
-                return JsonResponse({"code": 401, "message": "No authenticate header"})
+                return JsonResponse({
+                    "success": False,
+                    "status_code": 401,
+                    "data": {
+                        "message": "No Authenticate Header",
+                    },
+                }, status=401)
             # 获取token并校验其合法性
             if auth[0].lower() == 'token':
                 try:
                     login_info = jwt.decode(auth[1], settings.SECRET_KEY, algorithms=['HS256'])
                     username = login_info.get('data').get('username')
                 except jwt.ExpiredSignatureError:
-                    return JsonResponse({"status_code": 401, "message": "Token expired"})
+                    return JsonResponse({
+                        "success": False,
+                        "status_code": 401,
+                        "data": {
+                            "message": "Token Expired",
+                        },
+                    }, status=401)
                 except jwt.InvalidTokenError:
-                    return JsonResponse({"status_code": 401, "message": "Invalid token"})
+                    return JsonResponse({
+                        "success": False,
+                        "status_code": 401,
+                        "data": {
+                            "message": "Invalid Token",
+                        },
+                    }, status=401)
                 except jwt.Exception as e:
-                    return JsonResponse({"status_code": 401, "message": "Can not get user object"})
-
+                    return JsonResponse({
+                            "success": False,
+                            "status_code": 401,
+                            "data": {
+                                "message": "Can not Get User Object",
+                            },
+                        }, status=401)
                 try:
-                    user = User.objects.get(username=username)
+                    db = 'db_' + login_info.get('data').get('region')
+                    user = User.objects.using(db).get(username=username)
                 except User.DoesNotExist:
-                    return JsonResponse({"status_code": 401, "message": "User Does Not Exist"})
+                    return JsonResponse({
+                        "success": False,
+                        "status_code": 401,
+                        "data": {
+                            "message": "User Does Not Exist",
+                        },
+                    }, status=401)
 
             else:
-                return JsonResponse({"status_code": 401, "message": "Not Support Auth Type"})
+                return JsonResponse({
+                    "success": False,
+                    "status_code": 401,
+                    "data": {
+                        "message": "Not Support Auth Type",
+                    },
+                }, status=401)
             # 登录成功
-            request
             return view_func(request, user, *args, **kwargs)
         return _wrapped_view
     return decorator
@@ -46,17 +81,44 @@ def signup(request):
     add_password = request.POST.get('password')
     add_email = request.POST.get('email')
     add_region = request.POST.get('region')
-    if User.objects.filter(nickname=add_nickname):
-        return JsonResponse({"status_code": 400, "message": "The nickname has bean used"})
-    if User.objects.filter(username=add_username):
-        return JsonResponse({"status_code": 400, "message": "The username has bean used"})
-    if User.objects.filter(email=add_email):
-        return JsonResponse({"status_code": 400, "message": "The email has bean used"})
+    db = 'db_' + add_region
+    if User.objects.using(db).filter(nickname=add_nickname):
+        return JsonResponse({
+            "success": False,
+            "status_code": 400,
+            "data": {
+                "message": "The nickname has bean used",
+            },
+        }, status=400)
+    if User.objects.using(db).filter(username=add_username):
+        return JsonResponse({
+            "success": False,
+            "status_code": 400,
+            "data": {
+                "message": "The username has bean used",
+            },
+        }, status=400)
+    if User.objects.using(db).filter(email=add_email):
+        return JsonResponse({
+            "success": False,
+            "status_code": 400,
+            "data": {
+                "message": "The email has bean used",
+            },
+        }, status=400)
     m1 = hashlib.md5()
     m1.update(add_password.encode('utf-8'))
     User.objects.create(nickname=add_nickname, username=add_username, password=m1.hexdigest(),
                         email=add_email, region=add_region)
-    return JsonResponse({"status_code": 200, "message": "sign up success"})
+    return JsonResponse({
+        "success": True,
+        "status_code": 200,
+        "data": {
+            "nickname": add_nickname,
+            "username": add_username,
+            "region": add_region,
+        },
+    }, status=200)
 
 
 def login(request):
@@ -69,11 +131,23 @@ def login(request):
     try:
         user = User.objects.using(user_db).get(username=login_username, password=m1.hexdigest())
     except User.DoesNotExist:
-        return JsonResponse({"status_code": 403, "message": "user does not exist or password wrong"})
+        return JsonResponse({
+            "success": False,
+            "status_code": 403,
+            "data": {
+                "message": "user does not exist or password wrong",
+            },
+        }, status=403)
     return JsonResponse({
-        "nickname": user.nickname,
-        "username": user.username,
-        "email": user.email,
-        "region": user.region,
-        "token": user.token,
-    })
+        "success": True,
+        "status_code": 200,
+        "data": {
+            "user": {
+                "nickname": user.nickname,
+                "username": user.username,
+                "email": user.email,
+                "region": user.region,
+            },
+            "token": user.token,
+        }
+    }, status=200)
