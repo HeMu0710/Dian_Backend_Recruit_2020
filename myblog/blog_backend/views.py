@@ -10,6 +10,7 @@ import json
 
 @auth_required()
 def blog(request, user):
+    # 根据用户region选择对应的数据库，之后操作同理
     db = 'db_' + user.region
     blog_list = Article.objects.using(db).all()
     data = serializers.serialize('json', blog_list,
@@ -20,7 +21,7 @@ def blog(request, user):
         "success": True,
         "status_code": 200,
         "data": data
-    }, safe=False, status=200)
+    }, status=200)
 
 
 @auth_required()
@@ -44,7 +45,7 @@ def blogRUD(request, user, blog_id):
                 "blog_data": blog_data,
                 "comments_data": comments_data,
             },
-        }, safe=False, status=200)
+        }, status=200)
 
     # U,更新（修改）博客
     if request.method == 'POST':
@@ -109,8 +110,10 @@ def comment(request, user, blog_id):
 @auth_required()
 def deleteComment(request, user, blog_id, comment_id):
     db = 'db_' + user.region
+    # 删除评论
     if request.method == 'DELETE':
         delete_comment = Comment.objects.using(db).get(pk=comment_id)
+        # 检测当前用户是否有权删除评论，即是否为评论作者或者该文章作者
         if user.nickname == delete_comment.comment_user or \
                 user == Article.objects.using(db).get(pk=blog_id).article_author:
             comment_content = delete_comment.comment_content
@@ -138,6 +141,7 @@ def deleteComment(request, user, blog_id, comment_id):
 @auth_required()
 def addBlog(request, user):
     db = 'db_' + user.region
+    # 创建博客
     add_article_title = request.POST.get('article_title')
     add_article_content = request.POST.get('article_content')
     Article.objects.using(db).create(article_title=add_article_title,

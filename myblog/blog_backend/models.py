@@ -19,6 +19,7 @@ class User(models.Model):
 
     objects = UserManager()
 
+    # 重写save方法以保证数据存储到对应地区的数据库
     def save(self, force_insert=False, force_update=False, using=None,
              update_fields=None):
         super(User, self).save(using='db_' + self.region)
@@ -34,6 +35,7 @@ class User(models.Model):
         return self._generate_jwt_token()
 
     def _generate_jwt_token(self):
+        # 生成当前用户对应得jwt，过期时间为1天后
         token = jwt.encode({
             'exp': datetime.datetime.utcnow() + datetime.timedelta(days=1),
             'iat': datetime.datetime.utcnow(),
@@ -57,6 +59,7 @@ class Article(models.Model):
     created_date = models.DateTimeField(auto_now_add=True)
     edited_date = models.DateTimeField(auto_now=True)
 
+    # 重写save方法以保证数据存储到对应地区的数据库
     def save(self, force_insert=False, force_update=False, using=None,
              update_fields=None):
         super(Article, self).save(using='db_' + self.article_author.region)
@@ -70,3 +73,4 @@ class Comment(models.Model):
     comment_user = models.CharField(max_length=50)
     comment_content = models.TextField()
     comment_date = models.DateTimeField(auto_now_add=True)
+

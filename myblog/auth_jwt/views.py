@@ -8,11 +8,17 @@ from blog_backend.models import User
 
 
 def auth_required():
+    """
+    用户认证装饰器
+    :return:
+    """
+
     def decorator(view_func):
         def _wrapped_view(request, *args, **kwargs):
             try:
                 auth = request.META.get('HTTP_AUTHORIZATION').split()
             except AttributeError:
+                # 无认证信息
                 return JsonResponse({
                     "success": False,
                     "status_code": 401,
@@ -43,12 +49,12 @@ def auth_required():
                     }, status=401)
                 except jwt.Exception as e:
                     return JsonResponse({
-                            "success": False,
-                            "status_code": 401,
-                            "data": {
-                                "message": "Can not Get User Object",
-                            },
-                        }, status=401)
+                        "success": False,
+                        "status_code": 401,
+                        "data": {
+                            "message": "Can not Get User Object",
+                        },
+                    }, status=401)
                 try:
                     db = 'db_' + login_info.get('data').get('region')
                     user = User.objects.using(db).get(username=username)
@@ -71,17 +77,26 @@ def auth_required():
                 }, status=401)
             # 登录成功
             return view_func(request, user, *args, **kwargs)
+
         return _wrapped_view
+
     return decorator
 
 
 def signup(request):
+    """
+    注册
+    :param request:
+    :return:
+    """
     add_nickname = request.POST.get('nickname')
     add_username = request.POST.get('username')
     add_password = request.POST.get('password')
     add_email = request.POST.get('email')
     add_region = request.POST.get('region')
+    # 设置地区对应的数据库
     db = 'db_' + add_region
+    # 检测注册信息合法性
     if User.objects.using(db).filter(nickname=add_nickname):
         return JsonResponse({
             "success": False,
@@ -106,6 +121,7 @@ def signup(request):
                 "message": "The email has bean used",
             },
         }, status=400)
+    # 对密码进行md5加密
     m1 = hashlib.md5()
     m1.update(add_password.encode('utf-8'))
     User.objects.create(nickname=add_nickname, username=add_username, password=m1.hexdigest(),
@@ -122,6 +138,12 @@ def signup(request):
 
 
 def login(request):
+    """
+    登录
+    :param request:
+    :return:
+    """
+    # 登录对应地区
     login_type = request.GET.get('login_type')
     user_db = 'db_' + login_type
     login_username = request.POST.get('username')
