@@ -93,7 +93,7 @@ def signup(request):
     add_username = request.POST.get('username')
     add_password = request.POST.get('password')
     add_email = request.POST.get('email')
-    add_region = request.POST.get('region')
+    add_region = request.GET.get('blog_type')
     # 设置地区对应的数据库
     db = 'db_' + add_region
     # 检测注册信息合法性
@@ -144,8 +144,8 @@ def login(request):
     :return:
     """
     # 登录对应地区
-    login_type = request.GET.get('login_type')
-    user_db = 'db_' + login_type
+    blog_type = request.GET.get('blog_type')
+    user_db = 'db_' + blog_type
     login_username = request.POST.get('username')
     login_password = request.POST.get('password')
     m1 = hashlib.md5()

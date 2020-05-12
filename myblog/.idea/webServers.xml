@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="WebServers">
+    <option name="servers">
+      <webServer id="21c16752-c683-441e-8fea-1b006bb0ec83" name="aliyun_ecs" url="http://holdice.club">
+        <fileTransfer rootFolder="/root/Win10Projects" accessType="SFTP" host="47.112.128.54" port="22" sshConfigId="e2417c31-2ccf-4189-a480-00ee82199ffb" sshConfig="root@47.112.128.54:22 password">
+          <advancedOptions>
+            <advancedOptions dataProtectionLevel="Private" passiveMode="true" shareSSLContext="true" />
+          </advancedOptions>
+        </fileTransfer>
+      </webServer>
+    </option>
+  </component>
+</project>

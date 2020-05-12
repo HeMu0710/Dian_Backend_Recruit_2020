@@ -23,9 +23,9 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 SECRET_KEY = 'bxkm1u@dd61+4kr!gp2y0kh6rcq%4lfr!xo4fock!t9)85ut_@'
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = False
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['127.0.0.1', 'localhost ', '47.112.128.54']
 
 
 # Application definition
@@ -33,6 +33,7 @@ ALLOWED_HOSTS = []
 INSTALLED_APPS = [
     'auth_jwt',
     'blog_backend',
+
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -79,33 +80,33 @@ DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql',
         'NAME': 'my_blog_cn',
-        'USER': 'root',
-        'PASSWORD': '3239',
-        'HOST': '127.0.0.1',
+        'USER': 'aroot',
+        'PASSWORD': 'HeMu!3239',
+        'HOST': 'study.holdice.club',
         'PORT': '3306',
     },
     'db_cn': {
         'ENGINE': 'django.db.backends.mysql',
         'NAME': 'my_blog_cn',
-        'USER': 'root',
-        'PASSWORD': '3239',
-        'HOST': '127.0.0.1',
+        'USER': 'aroot',
+        'PASSWORD': 'HeMu!3239',
+        'HOST': 'study.holdice.club',
         'PORT': '3306',
     },
     'db_us': {
         'ENGINE': 'django.db.backends.mysql',
         'NAME': 'my_blog_us',
-        'USER': 'root',
-        'PASSWORD': '3239',
-        'HOST': '127.0.0.1',
+        'USER': 'aroot',
+        'PASSWORD': 'HeMu!3239',
+        'HOST': 'study.holdice.club',
         'PORT': '3306',
     },
     'db_uk': {
         'ENGINE': 'django.db.backends.mysql',
         'NAME': 'my_blog_uk',
-        'USER': 'root',
-        'PASSWORD': '3239',
-        'HOST': '127.0.0.1',
+        'USER': 'aroot',
+        'PASSWORD': 'HeMu!3239',
+        'HOST': 'study.holdice.club',
         'PORT': '3306',
     },
 }
