@@ -1,26 +1,58 @@
+from django.db.models import Q
 from django.shortcuts import render
 from django.http import HttpResponse, JsonResponse
 from django.core import serializers
+from django.core.paginator import Paginator
 from django.conf import settings
-from blog_backend.models import User, Article, Comment
+from blog_backend.models import User, Article, Comment, Tag
 from auth_jwt.views import auth_required
 
-import json
+import json, datetime
 
 
 @auth_required()
 def blog(request, user):
     # 根据用户region选择对应的数据库，之后操作同理
     db = 'db_' + user.region
-    blog_list = Article.objects.using(db).all()
-    data = serializers.serialize('json', blog_list,
-                                 fields=('article_title', 'article_author', 'created_date', 'edited_date'),
-                                 use_natural_foreign_keys=True)
+    page_number = request.GET.get('page')
+    blog_all = Article.objects.using(db).all()
+    pager = Paginator(blog_all, 5)
+    data = serializers.serialize('json', pager.page(page_number),
+                                 fields=('article_title', 'article_author', 'created_date',
+                                         'edited_date', 'tags'), use_natural_foreign_keys=True)
     data = json.loads(data)
     return JsonResponse({
         "success": True,
         "status_code": 200,
         "data": data
+    }, status=200)
+
+
+@auth_required()
+def search(request, user):
+    # 实现全局搜索
+    db = 'db_' + user.region
+    page_number = request.GET.get('page')
+    keyword = request.GET.get('keyword')
+    search_result_list = Article.objects.using(db).filter(
+        Q(article_title__icontains=keyword) | Q(article_author__nickname__icontains=keyword)
+        | Q(article_content__icontains=keyword) | Q(tags__tag_name__icontains=keyword)
+        | Q(article_author__email__icontains=keyword) | Q(article_author__username__icontains=keyword)
+        | Q(comment__comment_content__icontains=keyword))
+    search_result_list = list(set(search_result_list))
+    pager = Paginator(search_result_list, 5)
+    result = serializers.serialize('json', pager.page(page_number),
+                                   fields=('article_title', 'article_author', 'created_date', 'edited_date', 'tags'),
+                                   use_natural_foreign_keys=True)
+    result = json.loads(result)
+    return JsonResponse({
+        "success": True,
+        "status_code": 200,
+        "data": {
+            "keyword": keyword,
+            "result_nums": len(search_result_list),
+            "results": result,
+        }
     }, status=200)
 
 
@@ -31,6 +63,8 @@ def blogRUD(request, user, blog_id):
 
     # R,展示博客内容
     if request.method == 'GET':
+        article.click_nums += 1
+        article.save()
         blog_data = serializers.serialize('json', [article], use_natural_foreign_keys=True)
         blog_data = json.loads(blog_data)
         comments = Comment.objects.using(db).filter(comment_article=article)
@@ -53,7 +87,8 @@ def blogRUD(request, user, blog_id):
         if article.article_author == user:
             article.article_title = request.POST.get('article_title')
             article.article_content = request.POST.get('article_content')
-            article.save(using=db)
+            article.edited_date = datetime.datetime.now()
+            article.save()
             return JsonResponse({
                 "success": True,
                 "status_code": 200,
@@ -72,6 +107,10 @@ def blogRUD(request, user, blog_id):
     if request.method == 'DELETE':
         # 检查当前用户是否为博客的作者
         if article.article_author == user:
+            for tag in article.tags.all():
+                tag.related_article_nums -= 1
+                if tag.related_article_nums <= 0:
+                    tag.delete()
             article.delete()
             return JsonResponse({
                 "success": True,
@@ -90,6 +129,35 @@ def blogRUD(request, user, blog_id):
                     "message": "No Right to Delete",
                 },
             }, status=403)
+
+
+@auth_required()
+def addBlog(request, user):
+    db = 'db_' + user.region
+    # 创建博客
+    add_article_title = request.POST.get('article_title')
+    add_article_content = request.POST.get('article_content')
+
+    add_article = Article.objects.using(db).create(article_title=add_article_title,
+                                                   article_content=add_article_content,
+                                                   article_author=user,
+                                                   edited_date=datetime.datetime.now())
+    add_article_tags = request.POST.get('article_tags').split()
+    for tag_name in add_article_tags:
+        try:
+            tag = Tag.objects.using(db).get(tag_name=tag_name)
+        except Tag.DoesNotExist:
+            tag = Tag.objects.using(db).create(tag_name=tag_name)
+
+        add_article.tags.add(tag)
+        tag.related_article_nums += 1
+        tag.save()
+
+    return JsonResponse({
+        "success": True,
+        "status_code": 201,
+        "data": {}
+    }, status=201)
 
 
 @auth_required()
@@ -139,17 +207,13 @@ def deleteComment(request, user, blog_id, comment_id):
 
 
 @auth_required()
-def addBlog(request, user):
+def like(request, user, blog_id):
     db = 'db_' + user.region
-    # 创建博客
-    add_article_title = request.POST.get('article_title')
-    add_article_content = request.POST.get('article_content')
-    Article.objects.using(db).create(article_title=add_article_title,
-                                     article_content=add_article_content, article_author=user)
+    article = Article.objects.using(db).get(pk=blog_id)
+    article.liked_times += 1
+    article.save()
     return JsonResponse({
         "success": True,
-        "status_code": 201,
-        "data": {}
-        }, status=201)
-
-
+        "status_code": 200,
+        "data": {},
+    }, status=200)
