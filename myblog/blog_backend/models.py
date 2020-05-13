@@ -34,8 +34,8 @@ class User(models.Model):
     def token(self):
         return self._generate_jwt_token()
 
+    # 生成当前用户对应得jwt，过期时间为1天后
     def _generate_jwt_token(self):
-        # 生成当前用户对应得jwt，过期时间为1天后
         token = jwt.encode({
             'exp': datetime.datetime.utcnow() + datetime.timedelta(days=1),
             'iat': datetime.datetime.utcnow(),
