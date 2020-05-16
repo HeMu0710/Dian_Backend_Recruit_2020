@@ -11,9 +11,9 @@ import json, datetime
 
 
 @auth_required()
-def blog(request, user):
+def blog(request, _):
     # 根据用户region选择对应的数据库，之后操作同理
-    db = 'db_' + user.region
+    db = request.session['blog_type']
     page_number = request.GET.get('page')
     blog_all = Article.objects.using(db).all()
     pager = Paginator(blog_all, 5)
@@ -24,14 +24,14 @@ def blog(request, user):
     return JsonResponse({
         "success": True,
         "status_code": 200,
-        "data": data
+        "data": data,
     }, status=200)
 
 
 @auth_required()
 def search(request, user):
     # 实现全局搜索
-    db = 'db_' + user.region
+    db = request.session['blog_type']
     page_number = request.GET.get('page')
     keyword = request.GET.get('keyword')
     search_result_list = Article.objects.using(db).filter(
@@ -58,7 +58,7 @@ def search(request, user):
 
 @auth_required()
 def blogRUD(request, user, blog_id):
-    db = 'db_' + user.region
+    db = request.session['blog_type']
     article = Article.objects.using(db).get(pk=blog_id)
 
     # R,展示博客内容
@@ -133,7 +133,7 @@ def blogRUD(request, user, blog_id):
 
 @auth_required()
 def addBlog(request, user):
-    db = 'db_' + user.region
+    db = request.session['blog_type']
     # 创建博客
     add_article_title = request.POST.get('article_title')
     add_article_content = request.POST.get('article_content')
@@ -162,7 +162,7 @@ def addBlog(request, user):
 
 @auth_required()
 def comment(request, user, blog_id):
-    db = 'db_' + user.region
+    db = request.session['blog_type']
     # 新增评论
     add_comment_content = request.POST.get('comment_content')
     article = Article.objects.using(db).get(pk=blog_id)
@@ -177,7 +177,7 @@ def comment(request, user, blog_id):
 
 @auth_required()
 def deleteComment(request, user, blog_id, comment_id):
-    db = 'db_' + user.region
+    db = request.session['blog_type']
     # 删除评论
     if request.method == 'DELETE':
         delete_comment = Comment.objects.using(db).get(pk=comment_id)
@@ -208,7 +208,7 @@ def deleteComment(request, user, blog_id, comment_id):
 
 @auth_required()
 def like(request, user, blog_id):
-    db = 'db_' + user.region
+    db = request.session['blog_type']
     article = Article.objects.using(db).get(pk=blog_id)
     article.liked_times += 1
     article.save()

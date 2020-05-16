@@ -160,6 +160,7 @@ def login(request):
                 "message": "user does not exist or password wrong",
             },
         }, status=403)
+    request.session['blog_type'] = 'db_' + user.region
     return JsonResponse({
         "success": True,
         "status_code": 200,
